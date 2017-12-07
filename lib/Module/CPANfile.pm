@@ -164,7 +164,7 @@ sub to_string {
     for my $feature ($self->features) {
         $code .= sprintf "feature %s, %s => sub {\n", _dump($feature->identifier), _dump($feature->description);
         $code .= $self->_dump_prereqs($feature->prereqs->as_string_hash, $include_empty, 4);
-        $code .= "}\n\n";
+        $code .= "};\n\n";
     }
 
     $code =~ s/\n+$/\n/s;
