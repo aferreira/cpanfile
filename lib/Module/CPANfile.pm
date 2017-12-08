@@ -58,10 +58,10 @@ sub parse {
 }
 
 sub from_prereqs {
-    my($proto, $prereqs) = @_;
+    my $proto = shift;
 
     my $self = $proto->new;
-    $self->{_prereqs} = Module::CPANfile::Prereqs->from_cpan_meta($prereqs);
+    $self->{_prereqs} = Module::CPANfile::Prereqs->from_cpan_meta(@_);
 
     $self;
 }
@@ -265,6 +265,9 @@ C<as_string_hash>.
   # read MYMETA, then feed the prereqs to create Module::CPANfile
   my $meta = CPAN::Meta->load_file('MYMETA.json');
   my $file = Module::CPANfile->from_prereqs($meta->prereqs);
+
+  # also
+  my $file = Module::CPANfile->from_prereqs($meta->prereqs, $meta->features);
 
   # load cpanfile, then recreate it with round-trip
   my $file = Module::CPANfile->load('cpanfile');
