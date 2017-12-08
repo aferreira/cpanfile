@@ -189,11 +189,11 @@ sub _dump_prereqs {
 
     my $code = '';
     for my $phase (qw(runtime configure build test develop)) {
-        my $indent = $phase eq 'runtime' ? '' : '    ';
-        $indent = (' ' x ($base_indent || 0)) . $indent;
+        my $indent1 = (' ' x ($base_indent || 0));
+        my $indent = $indent1 . ($phase eq 'runtime' ? '' : '    ');
 
         my($phase_code, $requirements);
-        $phase_code .= "on $phase => sub {\n" unless $phase eq 'runtime';
+        $phase_code .= "${indent1}on $phase => sub {\n" unless $phase eq 'runtime';
 
         for my $type (qw(requires recommends suggests conflicts)) {
             for my $mod (sort keys %{$prereqs->{$phase}{$type}}) {
@@ -206,7 +206,7 @@ sub _dump_prereqs {
         }
 
         $phase_code .= "\n" unless $requirements;
-        $phase_code .= "};\n" unless $phase eq 'runtime';
+        $phase_code .= "${indent1}};\n" unless $phase eq 'runtime';
 
         $code .= $phase_code . "\n" if $requirements or $include_empty;
     }
