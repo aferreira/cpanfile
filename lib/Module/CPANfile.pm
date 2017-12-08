@@ -58,10 +58,10 @@ sub parse {
 }
 
 sub from_prereqs {
-    my($proto, $prereqs) = @_;
+    my $proto = shift;
 
     my $self = $proto->new;
-    $self->{_prereqs} = Module::CPANfile::Prereqs->from_cpan_meta($prereqs);
+    $self->{_prereqs} = Module::CPANfile::Prereqs->from_cpan_meta(@_);
 
     $self;
 }
@@ -162,9 +162,9 @@ sub to_string {
     $code .= $self->_dump_prereqs($prereqs, $include_empty);
 
     for my $feature ($self->features) {
-        $code .= sprintf "feature %s, %s => sub {\n", _dump($feature->{identifier}), _dump($feature->{description});
-        $code .= $self->_dump_prereqs($feature->{spec}, $include_empty, 4);
-        $code .= "}\n\n";
+        $code .= sprintf "feature %s, %s => sub {\n", _dump($feature->identifier), _dump($feature->description);
+        $code .= $self->_dump_prereqs($feature->prereqs->as_string_hash, $include_empty, 4);
+        $code .= "};\n\n";
     }
 
     $code =~ s/\n+$/\n/s;
@@ -189,11 +189,11 @@ sub _dump_prereqs {
 
     my $code = '';
     for my $phase (qw(runtime configure build test develop)) {
-        my $indent = $phase eq 'runtime' ? '' : '    ';
-        $indent = (' ' x ($base_indent || 0)) . $indent;
+        my $indent1 = (' ' x ($base_indent || 0));
+        my $indent = $indent1 . ($phase eq 'runtime' ? '' : '    ');
 
         my($phase_code, $requirements);
-        $phase_code .= "on $phase => sub {\n" unless $phase eq 'runtime';
+        $phase_code .= "${indent1}on $phase => sub {\n" unless $phase eq 'runtime';
 
         for my $type (qw(requires recommends suggests conflicts)) {
             for my $mod (sort keys %{$prereqs->{$phase}{$type}}) {
@@ -206,7 +206,7 @@ sub _dump_prereqs {
         }
 
         $phase_code .= "\n" unless $requirements;
-        $phase_code .= "};\n" unless $phase eq 'runtime';
+        $phase_code .= "${indent1}};\n" unless $phase eq 'runtime';
 
         $code .= $phase_code . "\n" if $requirements or $include_empty;
     }
@@ -265,6 +265,9 @@ C<as_string_hash>.
   # read MYMETA, then feed the prereqs to create Module::CPANfile
   my $meta = CPAN::Meta->load_file('MYMETA.json');
   my $file = Module::CPANfile->from_prereqs($meta->prereqs);
+
+  # also
+  my $file = Module::CPANfile->from_prereqs($meta->prereqs, $meta->features);
 
   # load cpanfile, then recreate it with round-trip
   my $file = Module::CPANfile->load('cpanfile');

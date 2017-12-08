@@ -5,10 +5,22 @@ use CPAN::Meta::Feature;
 use Module::CPANfile::Prereq;
 
 sub from_cpan_meta {
-    my($class, $prereqs) = @_;
+    my ( $class, $prereqs, $features ) = ( shift, shift, shift );
 
     my $self = $class->new;
+    $self->_add_prereqs( undef, $prereqs );
+    if ($features) {
+        for my $fn ( keys %$features ) {
+            my $f = $features->{$fn};
+            $self->add_feature( $fn, $f->{description} );
+            $self->_add_prereqs( $fn, $f->{prereqs} );
+        }
+    }
+    $self;
+}
 
+sub _add_prereqs {
+    my ($self, $feature, $prereqs) = @_;
     for my $phase (keys %$prereqs) {
         for my $type (keys %{ $prereqs->{$phase} }) {
             while (my($module, $requirement) = each %{ $prereqs->{$phase}{$type} }) {
@@ -17,6 +29,7 @@ sub from_cpan_meta {
                     type  => $type,
                     module => $module,
                     requirement => Module::CPANfile::Requirement->new(name => $module, version => $requirement),
+                    (feature => $feature) x!! $feature,
                 );
             }
         }
