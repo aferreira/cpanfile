@@ -22,7 +22,7 @@ BEGIN {
 
 sub new {
     my($class, $file) = @_;
-    bless {}, $class;
+    bless { _prereqs => Module::CPANfile::Prereqs->new }, $class;
 }
 
 sub load {
